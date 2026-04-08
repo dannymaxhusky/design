@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lenovo Design System — Dark Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Lenovo Design Tokens ── */
+    :root {
+      --red:         #E2232A;
+      --red-dark:    #64131E;
+      --red-darker:  #1E0013;
+      --purple:      #4D144A;
+      --black:       #000000;
+      --near-black:  #1A1A1A;
+      --charcoal:    #6F7170;
+      --warm-gray:   #C4BEB6;
+      --off-white:   #D9D8D6;
+      --white:       #FFFFFF;
+      --pale-red:    #FAECEB;
+      --pale-red-m:  #F0C7BF;
+      --pale-purple: #F1E1ED;
+      --pale-blue:   #EAEEF5;
+      --coral:       #F26A52;
+
+      /* Dark surface system */
+      --bg:          #0A0A0A;
+      --surface-1:   #141414;
+      --surface-2:   #1E1E1E;
+      --surface-3:   #282828;
+      --border:      #2E2E2E;
+      --border-subtle: #222222;
+      --text-primary: #F5F5F5;
+      --text-secondary: #9A9A9A;
+      --text-muted:  #5A5A5A;
+
+      --shadow-sm:   0 2px 8px rgba(0,0,0,0.4);
+      --shadow-md:   0 4px 20px rgba(0,0,0,0.6);
+      --shadow-red:  0 4px 20px rgba(226,35,42,0.25);
+      --radius:      4px;
+      --font:        'Lato', 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    /* Page header */
+    .page-header {
+      background: var(--surface-1);
+      border-bottom: 1px solid var(--border);
+      padding: 24px 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+    }
+    .logo span { color: var(--red); }
+    .badge {
+      background: rgba(226,35,42,0.15);
+      color: var(--red);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      padding: 3px 10px;
+      border-radius: 2px;
+      text-transform: uppercase;
+    }
+
+    /* Sections */
+    .section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 64px 40px;
+    }
+    .section + .section { padding-top: 0; }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+      padding-bottom: 12px;
+      border-bottom: 3px solid var(--red);
+      display: inline-block;
+    }
+
+    /* ── Color Swatches ── */
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 16px;
+    }
+    .swatch {
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .swatch-color { height: 72px; }
+    .swatch-label {
+      background: var(--surface-2);
+      padding: 8px 10px;
+    }
+    .swatch-name { font-size: 11px; font-weight: 700; color: var(--text-primary); }
+    .swatch-hex  { font-size: 11px; color: var(--text-secondary); font-family: monospace; }
+
+    /* ── Typography ── */
+    .type-stack { display: flex; flex-direction: column; gap: 24px; }
+    .type-sample { border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+    .type-meta { font-size: 11px; color: var(--text-muted); font-family: monospace; margin-bottom: 6px; }
+
+    .t-display { font-size: 64px; font-weight: 700; line-height: 0.95; letter-spacing: -0.5px; }
+    .t-h1      { font-size: 48px; font-weight: 300; line-height: 0.95; letter-spacing: -0.3px; }
+    .t-h2      { font-size: 36px; font-weight: 400; line-height: 1.00; letter-spacing: -0.2px; }
+    .t-h3      { font-size: 28px; font-weight: 400; line-height: 1.05; }
+    .t-h4      { font-size: 22px; font-weight: 500; line-height: 1.10; }
+    .t-large   { font-size: 18px; font-weight: 300; line-height: 1.55; }
+    .t-body    { font-size: 16px; font-weight: 400; line-height: 1.60; color: var(--text-secondary); }
+    .t-small   { font-size: 14px; font-weight: 400; line-height: 1.50; color: var(--text-secondary); }
+    .t-caption { font-size: 13px; font-weight: 400; line-height: 1.40; letter-spacing: 0.1px; color: var(--text-muted); }
+    .t-label   { font-size: 12px; font-weight: 700; line-height: 1.33; letter-spacing: 0.5px; text-transform: uppercase; color: var(--red); }
+
+    /* ── Buttons ── */
+    .btn-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; }
+    .btn {
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      padding: 12px 28px;
+      border-radius: var(--radius);
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary {
+      background: var(--red);
+      color: var(--white);
+      border-color: var(--red);
+    }
+    .btn-primary:hover { background: var(--red-dark); border-color: var(--red-dark); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--red);
+      border-color: var(--red);
+    }
+    .btn-outline:hover { background: rgba(226,35,42,0.1); }
+
+    .btn-outline-white {
+      background: transparent;
+      color: var(--text-primary);
+      border-color: var(--border);
+    }
+    .btn-outline-white:hover { border-color: var(--warm-gray); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--red);
+      border-color: transparent;
+      padding: 12px 4px;
+    }
+    .btn-ghost:hover { text-decoration: underline; }
+
+    .btn-ghost-white {
+      background: transparent;
+      color: var(--text-primary);
+      border-color: transparent;
+      padding: 12px 4px;
+    }
+    .btn-ghost-white:hover { text-decoration: underline; }
+
+    .btn-surface {
+      background: var(--surface-2);
+      color: var(--text-primary);
+      border-color: var(--border);
+    }
+    .btn-surface:hover { background: var(--surface-3); }
+
+    .btn-disabled {
+      background: var(--surface-2);
+      color: var(--text-muted);
+      border-color: var(--border);
+      cursor: not-allowed;
+    }
+
+    /* ── Cards ── */
+    .cards-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+    .card {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      transition: border-color 200ms ease, box-shadow 200ms ease;
+    }
+    .card:hover {
+      border-color: var(--red);
+      box-shadow: var(--shadow-red);
+    }
+    .card-img {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+    }
+    .card-body { padding: 20px 24px; }
+    .card-tag {
+      background: rgba(226,35,42,0.15);
+      color: var(--red);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      border-radius: 2px;
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+    .card-title {
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+    .card-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      margin-bottom: 16px;
+    }
+    .card-link {
+      color: var(--red);
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+    }
+    .card-link:hover { text-decoration: underline; }
+
+    /* ── Form Inputs ── */
+    .form-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+    .form-input {
+      font-family: var(--font);
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--text-primary);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      outline: none;
+      transition: border 150ms ease;
+    }
+    .form-input::placeholder { color: var(--text-muted); }
+    .form-input:focus { border: 2px solid var(--red); padding: 9px 13px; }
+    .form-input.error { border: 2px solid var(--red); }
+    .form-input.disabled { background: var(--surface-1); color: var(--text-muted); cursor: not-allowed; }
+    .form-error { font-size: 13px; color: var(--red); }
+
+    /* ── Navigation ── */
+    .nav-demo {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+    .nav-logo span { color: var(--red); }
+    .nav-links { display: flex; gap: 24px; }
+    .nav-link { font-size: 14px; color: var(--text-secondary); text-decoration: none; padding: 4px 0; }
+    .nav-link:hover { color: var(--text-primary); }
+    .nav-link.active { color: var(--red); border-bottom: 2px solid var(--red); }
+
+    /* ── Tags ── */
+    .tags-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag {
+      background: rgba(226,35,42,0.15);
+      color: var(--red);
+      padding: 4px 10px;
+      border-radius: 2px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .tag-purple { background: rgba(77,20,74,0.3); color: #C08ABE; }
+    .tag-blue   { background: rgba(62,141,221,0.15); color: #7BB5E8; }
+    .tag-neutral { background: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border); }
+
+    /* ── Red Rule ── */
+    .red-rule { height: 3px; background: var(--red); width: 80px; margin-bottom: 24px; }
+
+    /* ── Hero Section Demos ── */
+    .hero-demo {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 64px 48px;
+      margin-bottom: 24px;
+    }
+    .hero-demo-black {
+      background: var(--black);
+      border-radius: var(--radius);
+      padding: 64px 48px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    /* L-pattern texture hint */
+    .hero-demo-black::before {
+      content: 'L L L L L L L L L L L L L L L L L L L L L L L L L L L L L L L L L L L L L L L L';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      font-size: 48px;
+      font-weight: 900;
+      color: rgba(255,255,255,0.025);
+      letter-spacing: 12px;
+      line-height: 1.1;
+      word-break: break-all;
+      pointer-events: none;
+      user-select: none;
+    }
+    .hero-demo-purple {
+      background: linear-gradient(135deg, #1E0013 0%, #4D144A 100%);
+      border-radius: var(--radius);
+      padding: 64px 48px;
+    }
+    .hero-headline {
+      font-size: 48px;
+      font-weight: 300;
+      line-height: 0.95;
+      letter-spacing: -0.3px;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .hero-sub {
+      font-size: 18px;
+      font-weight: 300;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      margin-bottom: 32px;
+      max-width: 540px;
+      position: relative;
+    }
+    .btn-row { position: relative; }
+
+    /* ── Elevation ── */
+    .elevation-row { display: flex; flex-wrap: wrap; gap: 24px; }
+    .elevation-card {
+      background: var(--surface-2);
+      border-radius: var(--radius);
+      padding: 24px;
+      width: 160px;
+      text-align: center;
+    }
+    .elevation-label { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+    .e0 { box-shadow: none; border: 1px solid var(--border); }
+    .e1 { box-shadow: var(--shadow-sm); border: 1px solid var(--border-subtle); }
+    .e2 { box-shadow: var(--shadow-md); border: 1px solid var(--border-subtle); }
+    .e-red { box-shadow: var(--shadow-red); border: 1px solid var(--red); }
+
+    /* Divider */
+    .divider { height: 1px; background: var(--border); margin: 0 40px; }
+
+    /* Selected row accent */
+    .table-demo { width: 100%; border-collapse: collapse; }
+    .table-demo th {
+      background: var(--near-black);
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 12px 16px;
+      text-align: left;
+    }
+    .table-demo td {
+      font-size: 14px;
+      color: var(--text-secondary);
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .table-demo tr:nth-child(even) td { background: var(--surface-1); }
+    .table-demo tr.selected td {
+      background: rgba(226,35,42,0.08);
+      border-left: 3px solid var(--red);
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+
+<!-- Page Header -->
+<header class="page-header">
+  <div class="logo">le<span>n</span>ovo</div>
+  <div class="badge">Design System · Dark</div>
+</header>
+
+<div class="section">
+  <!-- COLORS -->
+  <p class="section-title">Color Palette (Dark Mode)</p>
+  <div class="swatches">
+    <div class="swatch">
+      <div class="swatch-color" style="background:#E2232A;"></div>
+      <div class="swatch-label"><div class="swatch-name">Signature Red</div><div class="swatch-hex">#E2232A</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#0A0A0A;border:1px solid #333;"></div>
+      <div class="swatch-label"><div class="swatch-name">BG Base</div><div class="swatch-hex">#0A0A0A</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#141414;"></div>
+      <div class="swatch-label"><div class="swatch-name">Surface 1</div><div class="swatch-hex">#141414</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#1E1E1E;"></div>
+      <div class="swatch-label"><div class="swatch-name">Surface 2</div><div class="swatch-hex">#1E1E1E</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#282828;"></div>
+      <div class="swatch-label"><div class="swatch-name">Surface 3</div><div class="swatch-hex">#282828</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#2E2E2E;"></div>
+      <div class="swatch-label"><div class="swatch-name">Border</div><div class="swatch-hex">#2E2E2E</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#F5F5F5;"></div>
+      <div class="swatch-label"><div class="swatch-name">Text Primary</div><div class="swatch-hex">#F5F5F5</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#9A9A9A;"></div>
+      <div class="swatch-label"><div class="swatch-name">Text Secondary</div><div class="swatch-hex">#9A9A9A</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#4D144A;"></div>
+      <div class="swatch-label"><div class="swatch-name">Deep Purple</div><div class="swatch-hex">#4D144A</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#64131E;"></div>
+      <div class="swatch-label"><div class="swatch-name">Deep Red</div><div class="swatch-hex">#64131E</div></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#F26A52;"></div>
+      <div class="swatch-label"><div class="swatch-name">Mid Coral</div><div class="swatch-hex">#F26A52</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <!-- TYPOGRAPHY -->
+  <p class="section-title">Typography Scale</p>
+  <div class="type-stack">
+    <div class="type-sample">
+      <div class="type-meta">Display Hero · 64px · weight 700 · lh 0.95</div>
+      <div class="t-display">Lenovo Innovation</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-meta">Page Headline · 48px · weight 300 · lh 0.95</div>
+      <div class="t-h1">Smarter Technology for All</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-meta">Section Heading · 36px · weight 400 · lh 1.00</div>
+      <div class="t-h2">Designed for the real world</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-meta">Sub-heading · 28px · weight 400 · lh 1.05</div>
+      <div class="t-h3">Performance meets reliability</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-meta">Card Title · 22px · weight 500 · lh 1.10</div>
+      <div class="t-h4">ThinkPad X1 Carbon</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-meta">Large Body · 18px · weight 300 · lh 1.55</div>
+      <div class="t-large">Engineered for professionals who demand the best — lighter, faster, built to last.</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-meta">Body · 16px · weight 400 · lh 1.60</div>
+      <div class="t-body">Lenovo designs technology that works as hard as you do. Our products combine durability, performance, and intelligent features to keep you productive wherever you are.</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-meta">Small Body · 14px · weight 400 · lh 1.50</div>
+      <div class="t-small">Up to 32GB RAM · PCIe SSD · Intel Core Ultra 7 · 14-hour battery · MIL-SPEC tested</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-meta">Caption · 13px · weight 400 · lh 1.40</div>
+      <div class="t-caption">Prices and availability may vary. See product pages for full specifications and regional pricing.</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-meta">Label / Tag · 12px · weight 700 · letter-spacing 0.5px</div>
+      <div class="t-label">New Arrival</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <!-- BUTTONS -->
+  <p class="section-title">Buttons</p>
+  <div class="btn-row">
+    <button class="btn btn-primary">Shop now</button>
+    <button class="btn btn-outline">Learn more</button>
+    <button class="btn btn-outline-white">Compare</button>
+    <a href="#" class="btn btn-ghost">Explore all products →</a>
+    <a href="#" class="btn btn-ghost-white">View specs →</a>
+    <button class="btn btn-surface">Filter</button>
+    <button class="btn btn-disabled" disabled>Unavailable</button>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <!-- CARDS -->
+  <p class="section-title">Cards</p>
+  <div class="cards-row">
+    <div class="card">
+      <div class="card-img">💻</div>
+      <div class="card-body">
+        <span class="card-tag">New</span>
+        <div class="card-title">ThinkPad X1 Carbon Gen 13</div>
+        <div class="card-desc">The world's lightest 14" business laptop. Under 1kg, MIL-SPEC tough, built for elite performance.</div>
+        <a class="card-link" href="#">Learn more →</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-img">🖥️</div>
+      <div class="card-body">
+        <span class="card-tag">Featured</span>
+        <div class="card-title">Legion Pro 7i Gen 9</div>
+        <div class="card-desc">Dominate every game with Intel Core i9, RTX 4090, and Lenovo's advanced cooling architecture.</div>
+        <a class="card-link" href="#">Learn more →</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-img">🖱️</div>
+      <div class="card-body">
+        <span class="card-tag">Accessories</span>
+        <div class="card-title">ThinkPad TrackPoint II</div>
+        <div class="card-desc">Iconic precision control, wireless freedom. The legendary TrackPoint keyboard reimagined.</div>
+        <a class="card-link" href="#">Learn more →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <!-- FORMS -->
+  <p class="section-title">Form Inputs</p>
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Email address</label>
+      <input class="form-input" type="email" placeholder="name@company.com" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Product serial number</label>
+      <input class="form-input" type="text" placeholder="Enter serial number" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Error state</label>
+      <input class="form-input error" type="text" value="invalid-input" />
+      <span class="form-error">Please enter a valid serial number.</span>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Disabled</label>
+      <input class="form-input disabled" type="text" value="Not available" disabled />
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <!-- NAV -->
+  <p class="section-title">Navigation</p>
+  <nav class="nav-demo">
+    <div class="nav-logo">le<span>n</span>ovo</div>
+    <div class="nav-links">
+      <a class="nav-link active" href="#">Products</a>
+      <a class="nav-link" href="#">Solutions</a>
+      <a class="nav-link" href="#">Support</a>
+      <a class="nav-link" href="#">About</a>
+    </div>
+    <button class="btn btn-primary" style="padding:8px 20px;font-size:14px;">Shop now</button>
+  </nav>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <!-- TAGS -->
+  <p class="section-title">Tags & Labels</p>
+  <div class="tags-row">
+    <span class="tag">New Arrival</span>
+    <span class="tag">Best Seller</span>
+    <span class="tag">Limited Offer</span>
+    <span class="tag tag-purple">Premium</span>
+    <span class="tag tag-blue">ThinkPad</span>
+    <span class="tag tag-neutral">IdeaPad</span>
+    <span class="tag tag-neutral">Legion</span>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <!-- TABLE -->
+  <p class="section-title">Data Table (with Red Selection)</p>
+  <table class="table-demo">
+    <thead>
+      <tr>
+        <th>Model</th>
+        <th>Processor</th>
+        <th>RAM</th>
+        <th>Storage</th>
+        <th>Price</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>ThinkPad X1 Carbon Gen 13</td>
+        <td>Core Ultra 7 165H</td>
+        <td>32GB</td>
+        <td>1TB PCIe SSD</td>
+        <td>$1,799</td>
+      </tr>
+      <tr class="selected">
+        <td>Legion Pro 7i Gen 9</td>
+        <td>Core i9-14900HX</td>
+        <td>64GB</td>
+        <td>2TB PCIe SSD</td>
+        <td>$3,299</td>
+      </tr>
+      <tr>
+        <td>IdeaPad Slim 5i</td>
+        <td>Core i5-1335U</td>
+        <td>16GB</td>
+        <td>512GB SSD</td>
+        <td>$649</td>
+      </tr>
+      <tr>
+        <td>Yoga 9i Gen 9</td>
+        <td>Core Ultra 9 185H</td>
+        <td>32GB</td>
+        <td>1TB SSD</td>
+        <td>$1,499</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <!-- ELEVATION -->
+  <p class="section-title">Elevation & Depth</p>
+  <div class="elevation-row">
+    <div class="elevation-card e0">
+      <div style="font-size:24px;">📄</div>
+      <div class="elevation-label">Flat (0)<br><small>border only</small></div>
+    </div>
+    <div class="elevation-card e1">
+      <div style="font-size:24px;">📋</div>
+      <div class="elevation-label">Lifted (1)<br><small>card shadow</small></div>
+    </div>
+    <div class="elevation-card e2">
+      <div style="font-size:24px;">📦</div>
+      <div class="elevation-label">Floating (2)<br><small>modal shadow</small></div>
+    </div>
+    <div class="elevation-card e-red">
+      <div style="font-size:24px;">🔴</div>
+      <div class="elevation-label">Brand Glow<br><small>red shadow + border</small></div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <!-- HERO DEMOS -->
+  <p class="section-title">Hero Sections</p>
+
+  <!-- Standard dark surface hero -->
+  <div class="hero-demo">
+    <div class="red-rule"></div>
+    <h1 class="hero-headline">Smarter Technology<br>for All</h1>
+    <p class="hero-sub">Lenovo engineers breakthrough products for the people who shape tomorrow — from classrooms to boardrooms, from gaming rigs to data centers.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary">Explore products</button>
+      <a href="#" class="btn btn-ghost-white">Learn about Lenovo →</a>
+    </div>
+  </div>
+
+  <!-- Pure black hero with L-pattern texture -->
+  <div class="hero-demo-black">
+    <div class="red-rule"></div>
+    <h1 class="hero-headline">Legion. Built for<br>Dominance.</h1>
+    <p class="hero-sub" style="color:#9A9A9A;">RTX 4090. Core i9. 240Hz. The new Legion Pro redefines what a gaming laptop can be.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary">Shop Legion</button>
+      <a href="#" class="btn btn-ghost-white">See specs →</a>
+    </div>
+  </div>
+
+  <!-- Purple gradient (OneLenovo premium) -->
+  <div class="hero-demo-purple">
+    <div class="red-rule"></div>
+    <h1 class="hero-headline" style="color:#FFFFFF;">Introducing<br>Lenovo AI Core</h1>
+    <p class="hero-sub" style="color:rgba(255,255,255,0.65);">On-device intelligence that understands you. Powered by the next generation of Lenovo AI hardware.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary">Discover AI Core</button>
+      <a href="#" class="btn btn-ghost" style="color:#FFFFFF;">Read more →</a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
