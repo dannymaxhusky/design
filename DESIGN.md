@@ -28,13 +28,13 @@ The OneLenovo evolution adds a secondary dimension: a **Deep Purple** (`#4D144A`
 - **Charcoal Gray** (`#6F7170`): Secondary body text, metadata, captions
 - **Light Warm Gray** (`#C4BEB6`): Dividers, disabled states, subtle borders
 - **Off White** (`#D9D8D6`): Alternate section backgrounds, input fields
-- **Near Black** (`#1A1A1A`): Primary body text on light backgrounds
+- **Near Black** (`#1A1A1A`): Primary body text on light backgrounds *(convention value — official spec uses `#000000`)*
 
 ### OneLenovo Accent System
 - **Deep Purple** (`#4D144A`): Premium accent, section highlights, brand moments alongside Red
 - **Deep Red** (`#64131E`): Hover/pressed state for Signature Red, dark hero overlays
-- **Mid Coral** (`#F26A52`): Warm gradient companion, data visualization, secondary highlights
-- **Mid Salmon** (`#FFB9A2`): Tinted illustrations, soft data bars
+- **Mid Red 2** (`#F26A52`): Warm gradient companion, data visualization, secondary highlights
+- **Mid Red 3** (`#FFB9A2`): Tinted illustrations, soft data bars
 
 ### Tint Palette (Backgrounds & States)
 - **Pale Red** (`#FAECEB`): Error states, alert backgrounds, light brand tint sections
@@ -75,10 +75,12 @@ font-family: 'Helvetica Neue', 'Lato', Arial, sans-serif;
 
 ### Hierarchy
 
+> ⚠️ **Note:** Specific px sizes and weights below are inferred from visual observation of Lenovo.com and common web practice — the official brand guide only specifies the typefaces, weight range (Ultralight–Medium), and 95% headline leading. Treat these values as reasonable starting points, not authoritative specs.
+
 | Role | Font | Size | Weight | Line Height | Letter Spacing |
 |------|------|------|--------|-------------|----------------|
 | Display Hero | Montserrat Alternates | 64px | 700 | 0.95 | -0.5px |
-| Page Headline | Helvetica Neue | 48px | 300 | 0.95 | -0.3px |
+| Page Headline | Helvetica Neue | 48px | 300 | 0.95 ✓ | -0.3px |
 | Section Heading | Helvetica Neue | 36px | 400 | 1.00 | -0.2px |
 | Sub-heading | Helvetica Neue | 28px | 400 | 1.05 | -0.1px |
 | Card Title | Helvetica Neue | 22px | 500 | 1.10 | normal |
@@ -92,6 +94,8 @@ font-family: 'Helvetica Neue', 'Lato', Arial, sans-serif;
 | Micro | Helvetica Neue | 11px | 400 | 1.30 | 0.3px |
 | Button | Helvetica Neue | 15px | 500 | 1.00 | 0.3px |
 | Nav | Helvetica Neue | 14px | 400 | 1.00 | normal |
+
+*(✓ = confirmed by official brand guide; all others are inferred)*
 
 ### Principles
 - **95% leading at headline sizes**: Brand guide mandates headline leading at 95% of type size — tight, confident, authoritative
@@ -172,7 +176,7 @@ font-family: 'Helvetica Neue', 'Lato', Arial, sans-serif;
 - Background: `#FFFFFF` (light) or `#000000` (dark hero variant)
 - Height: 64px
 - Border-bottom: 1px solid `#D9D8D6` (light)
-- Logo: Lenovo wordmark in `#E2232A` and `#000000`, left-aligned
+- Logo: Lenovo wordmark in single color — `#000000` on light backgrounds, `#FFFFFF` on dark; red appears only in the brand rectangle beneath the wordmark, not within the letterforms
 - Nav links: 14px, Helvetica Neue 400, `#1A1A1A`, hover color `#E2232A`
 - Active link: `#E2232A` with 2px bottom border in `#E2232A`
 - CTA button (rightmost): Primary Red button
@@ -218,12 +222,14 @@ font-family: 'Helvetica Neue', 'Lato', Arial, sans-serif;
 
 ## 6. Depth & Elevation
 
+> ⚠️ **Note:** Shadow values below are inferred — the official brand guide describes a flat-first philosophy but does not publish specific box-shadow tokens.
+
 | Level | Shadow / Treatment | Use |
 |-------|--------------------|-----|
 | Flat (0) | No shadow | Navigation, body sections, tables |
-| Lifted (1) | `0 2px 8px rgba(0,0,0,0.08)` | Cards, product tiles, dropdown menus |
-| Floating (2) | `0 4px 16px rgba(0,0,0,0.12)` | Modal overlays, sticky headers on scroll |
-| Brand Glow | `0 4px 16px rgba(226,35,42,0.15)` | Hovered product cards, focused red CTAs |
+| Lifted (1) | `0 2px 8px rgba(0,0,0,0.08)` *(inferred)* | Cards, product tiles, dropdown menus |
+| Floating (2) | `0 4px 16px rgba(0,0,0,0.12)` *(inferred)* | Modal overlays, sticky headers on scroll |
+| Brand Glow | `0 4px 16px rgba(226,35,42,0.15)` *(inferred)* | Hovered product cards, focused red CTAs |
 | Red Accent | 3px solid `#E2232A` top or left border | Active states, selected items, featured panels |
 
 **Shadow Philosophy**: Lenovo's surfaces are largely flat. Depth is achieved through background-color contrast (white card on gray section) and the "brand glow" — a red-tinted shadow that only appears when the user interacts with a key element. This keeps the interface clean while making interactive moments feel charged and deliberate.
@@ -369,7 +375,7 @@ When generating an HTML slide deck using this design system, **always use the co
 
 <!-- Navigation chrome -->
 <nav class="nav-bar">
-  <div class="nav-logo">le<span style="color:#E2232A">n</span>ovo</div>
+  <div class="nav-logo">Lenovo</div>
   <div style="margin-left:auto;display:flex;align-items:center;gap:16px;">
     <span id="counter" style="font-size:12px;color:#6F7170;font-family:monospace;"></span>
   </div>
