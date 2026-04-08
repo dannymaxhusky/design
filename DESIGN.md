@@ -524,3 +524,373 @@ When generating an HTML slide deck using this design system, **always use the co
 3. **The `setTimeout(..., 600)` lock release must match or exceed the CSS `transition` duration** — if you shorten the transition to `.3s`, change the timeout to `350`.
 4. **Always use `document` for `keydown`/`wheel` listeners**, never a child element — otherwise focus state can silently swallow events.
 5. **`goTo(0)` on init replaces `slides[0].classList.add('active')`** — do not mix both patterns.
+
+---
+
+## 11. Slide Deck Narrative Template
+
+A well-structured business presentation follows a proven narrative arc. Use this template as the default starting point for any Lenovo business deck.
+
+### Standard Slide Order
+
+| # | Slide Type | Purpose | Slide Classes |
+|---|------------|---------|---------------|
+| 1 | **Cover / Title** | Capture attention, establish context | `slide-dark` (black bg) |
+| 2 | **Organisation** | Ground the audience in the team structure | `slide-white` |
+| 3 | **Context / Background** | Current state, problem statement | `slide-offwhite` |
+| 4 | **Key Initiatives / Priorities** | What matters most — ATL items | `slide-offwhite` |
+| 5 | **Current State / AI in Practice** | Show existing wins and tools | `slide-white` |
+| 6 | **Why Now / Strategic Data** | Data-driven urgency | `slide-dark` |
+| 7 | **Framework / Maturity Model** | Establish shared vocabulary | `slide-dark` |
+| 8 | **Roadmap / Timeline** | How we get there | `slide-offwhite` |
+| 9 | **Tooling / Capability Matrix** | What tools support the journey | `slide-offwhite` |
+| 10 | **Success Factors & Risks** | Governance, risk awareness | `slide-dark` |
+| 11 | **Call to Action / Next Steps** | Clear action item | `slide-dark` |
+
+### Narrative Arc Principles
+
+1. **Establish context before making asks** — Org chart → Background → Initiatives
+2. **Lead with wins (AI in Practice)** — Build credibility before presenting gaps
+3. **Data creates urgency (Why Now)** — Gartner/McKinsey stats establish rationale
+4. **Framework creates shared language** — Maturity models help align stakeholders
+5. **End with clear action** — Never leave the audience wondering "what now?"
+
+### Background Rhythm
+
+Alternate slide backgrounds for visual rhythm:
+
+```
+slide-white  →  slide-offwhite  →  slide-dark  →  repeat
+   (clean)        (warm)          (bold)         (contrast)
+```
+
+- **slide-white**: Content-heavy slides (tables, org charts, details)
+- **slide-offwhite**: Initiative slides, roadmaps (softer, less formal)
+- **slide-dark**: Hero moments (cover, strategy, CTAs) — white text pops
+
+---
+
+## 12. Content Composition Patterns
+
+Beyond individual components, these patterns define how content is organized at the slide level.
+
+### ATL / BTL Partition (Initiative Slides)
+
+**Above the Line (ATL)** = funded, approved, committed initiatives
+**Below the Line (BTL)** = wish-list, future consideration, dependent on funding
+
+```html
+<!-- Budget summary bar — sits above the tables -->
+<div class="budget-bar anim">
+  <span style="font-weight:700;">Leasing</span>
+  <span>Budget: <strong>$375K</strong></span>
+  <span>Ask: <strong>$1.52M</strong></span>
+  <span class="gap-negative">Gap: –$645K</span>
+  <span style="margin-left:auto;"><!-- Owner pills --></span>
+</div>
+
+<!-- ATL table -->
+<div>
+  <div style="font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.5px;text-transform:uppercase;color:var(--charcoal);margin-bottom:6px;">Above the line</div>
+  <table class="f-table"><!-- ... --></table>
+</div>
+
+<!-- BTL table -->
+<div style="margin-top:20px;">
+  <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:6px;">
+    <span style="font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.5px;color:var(--charcoal);">Below the line</span>
+    <span class="tag tag-neutral" style="font-size:10px;">1</span>
+  </div>
+  <table class="f-table"><!-- ... --></table>
+</div>
+```
+
+**CSS for budget-bar:**
+```css
+.budget-bar{
+  display:flex;align-items:center;gap:14px;padding:10px 16px;
+  background:rgba(0,0,0,.03);border-radius:var(--radius);font-size:13px;
+  flex-wrap:wrap;margin-bottom:16px;border-left:3px solid var(--red);
+}
+.budget-bar strong{color:var(--near-black);}
+.budget-bar .gap-negative{color:var(--red);font-weight:700;}
+```
+
+### Owner Pills Pattern
+
+Use color-coded pills to distinguish Biz Owner from DT Owner at a glance:
+
+| Role | Background | Text Color |
+|------|------------|------------|
+| Biz Owner | `#e0f2e9` (pale green) | `#15803d` (dark green) |
+| DT Owner | `#fef3e2` (pale amber) | `#c2610c` (dark amber) |
+| New Feature ★ | `#FAECEB` (pale red) | `#E2232A` (red) |
+
+```html
+<span class="owner-pill" style="background:#e0f2e9;color:#15803d;font-size:10px;">Andrew Stokes</span>
+<span class="owner-pill" style="background:#fef3e2;color:#c2610c;font-size:10px;">Danny Hu</span>
+```
+
+**CSS:**
+```css
+.owner-pill{
+  padding:2px 10px;border-radius:2px;font-size:10px;font-weight:700;
+  letter-spacing:.3px;
+}
+```
+
+### Star ★ Marker (New FY Items)
+
+Use ★ to mark items that are new for the fiscal year. This creates visual distinction without changing the card structure.
+
+```html
+<span>AP Integration <span class="star">★</span></span>
+
+<!-- With tooltip context -->
+<span class="sub-item new">Project ARDIC <span class="star">★</span></span>
+```
+
+**CSS:**
+```css
+.star{display:inline-block;color:var(--red);font-weight:700;font-size:.85em;margin-left:2px;vertical-align:middle;}
+.sub-item.new{background:var(--pale-red);color:var(--red);border-color:rgba(226,35,42,.15);font-weight:500;}
+```
+
+### mono-label (Sub-section Labels)
+
+Use `mono-label` for fine-grained section categorization within a slide. It sits between `section-label` (large section) and content.
+
+```html
+<div style="font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.5px;color:var(--success);margin-bottom:10px;">Success factors</div>
+<div style="font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.5px;color:var(--red);margin-bottom:10px;">Risks &amp; mitigations</div>
+```
+
+### FY Delivery / Plan Dual Block
+
+For org chart or initiative slides, show both what's been delivered and what's planned:
+
+```html
+<div class="fy-delivery">
+  <div class="fy-delivery-label">FY25/26 Delivered</div>
+  80% MLA migrated into EaaS; 4/5 ISG-Leasing Migrated
+</div>
+<div class="fy-plan">
+  <div class="fy-plan-label">FY26/27 Plan</div>
+  MSA, IaaS Migration
+</div>
+```
+
+**CSS:**
+```css
+.fy-delivery{
+  margin-top:8px;padding:7px 9px;
+  background:linear-gradient(135deg,rgba(10,207,131,.08),rgba(26,188,254,.08));
+  border:1px solid rgba(10,207,131,.25);border-radius:6px;
+  font-size:11px;color:rgba(0,0,0,.6);line-height:1.45;
+}
+.fy-delivery-label{
+  font-family:var(--font-mono);font-size:9px;font-weight:600;
+  letter-spacing:.5px;text-transform:uppercase;color:#0acf83;margin-bottom:3px;
+}
+.fy-plan{
+  margin-top:6px;padding:7px 9px;
+  background:linear-gradient(135deg,rgba(162,89,255,.07),rgba(242,78,30,.07));
+  border:1px solid rgba(162,89,255,.22);border-radius:6px;
+  font-size:11px;color:rgba(0,0,0,.6);line-height:1.45;
+}
+.fy-plan-label{
+  font-family:var(--font-mono);font-size:9px;font-weight:600;
+  letter-spacing:.5px;text-transform:uppercase;color:#a259ff;margin-bottom:3px;
+}
+```
+
+---
+
+## 13. Information Hierarchy Guide
+
+### Text Hierarchy Levels
+
+Lenovo typography has 5 distinct hierarchy levels for content organization:
+
+| Level | Class | Size/Weight | Use When |
+|-------|-------|-------------|----------|
+| **1. Hero** | `.slide-title` | 48px, weight 300 | Slide headlines only |
+| **2. Subtitle** | `.slide-subtitle` | 18px, weight 300 | Supporting context under headline |
+| **3. Section** | `.section-label` | 11px, weight 700, uppercase | Major slide sections, with red underline |
+| **4. Component** | `.branch-head`, `.card-title` | 14-22px, weight 500 | Card titles, branch headers |
+| **5. Body** | `.ai-desc`, `.tl-desc` | 12-14px, weight 400 | Descriptive text, captions |
+| **6. Meta** | `text-xs`, `.mono-label` | 11-13px, weight 400-500 | Labels, timestamps, metadata |
+
+### When to Use Which Level
+
+**Slide Header Block (always present):**
+```html
+<div class="section-label anim">Organisation</div>
+<h2 class="slide-title anim">Lease Operation Team — structure</h2>
+<p class="slide-subtitle anim">Hierarchical org chart with FY26/27 new-development features marked ★</p>
+```
+
+**Card Title + Body:**
+```html
+<div class="ai-card">
+  <div class="ai-tag">AI-Build</div>
+  <div class="ai-title">Automated Batch Invoice Checker</div>
+  <div class="ai-desc">Scans 1,000 invoices per second for validation and anomaly detection</div>
+</div>
+```
+
+**Org Chart Branch:**
+```html
+<div class="branch-head">
+  <span class="branch-code">LOT-AR</span> Billing
+</div>
+<div class="sub-list">
+  <span class="sub-item new">R.DaaS <span class="star">★</span></span>
+  <!-- ... -->
+</div>
+```
+
+### Color Usage by Hierarchy
+
+- **Primary text** (`#1A1A1A`): Headlines, card titles, branch headers
+- **Charcoal** (`#6F7170`): Subtitles, descriptions, meta information
+- **Red** (`#E2232A`): CTAs, tags, star markers, section labels (underline only)
+- **White** (`#FFFFFF`): Text on dark backgrounds
+
+---
+
+## 14. Business Table Templates
+
+### Standard Initiative Table (ATL/BTL)
+
+```html
+<div class="section-label anim">Initiatives</div>
+<h2 class="slide-title anim">FY26/27 key projects</h2>
+<p class="slide-subtitle anim">Leaser capability roadmap — prioritized by business impact</p>
+
+<!-- Above the line -->
+<div>
+  <div style="font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.5px;text-transform:uppercase;color:var(--charcoal);margin-bottom:6px;">Above the line</div>
+  <div style="overflow-x:auto;">
+    <table class="f-table" style="min-width:920px;">
+      <thead>
+        <tr>
+          <th style="width:38px;">ITEM</th>
+          <th style="width:17%;">CAPABILITY</th>
+          <th style="width:28%;">BIZ BENEFIT</th>
+          <th style="width:90px;">BIZ OWNER</th>
+          <th style="width:80px;">DT OWNER</th>
+          <th style="width:52px;text-align:right;">SIZING</th>
+          <th>COMMENT</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="row-label" style="text-align:center;">2-1</td>
+          <td style="font-weight:600;color:var(--black);">Credit Control E2E</td>
+          <td>Ensure seamless credit application, decision-making, and control process.</td>
+          <td><span class="owner-pill" style="background:#e0f2e9;color:#15803d;font-size:10px;">Andrew Stokes</span></td>
+          <td><span class="owner-pill" style="background:#fef3e2;color:#c2610c;font-size:10px;">Danny Hu</span></td>
+          <td style="text-align:right;font-weight:600;color:var(--black);">$75K</td>
+          <td style="font-size:11px;color:rgba(0,0,0,.5);line-height:1.35;">Dependency: Linkredit IT capacity.</td>
+        </tr>
+        <!-- more rows -->
+      </tbody>
+    </table>
+  </div>
+</div>
+```
+
+### Tool / Capability Matrix
+
+```html
+<div class="cards-grid c3">
+  <div class="mx-card">
+    <div class="mx-head">Beginner</div>
+    <div class="mx-list">
+      Microsoft Copilot (M365 suite)<br>
+      Power Automate templates<br>
+      Pre-built Power BI dashboards
+    </div>
+  </div>
+  <div class="mx-card">
+    <div class="mx-head">Intermediate</div>
+    <div class="mx-list">
+      Custom Power Automate flows<br>
+      Python scripting for data prep<br>
+      Azure Cognitive Services APIs
+    </div>
+  </div>
+  <div class="mx-card">
+    <div class="mx-head">Advanced</div>
+    <div class="mx-list">
+      Custom ML models (Azure ML)<br>
+      GPT-4 / Claude API integrations<br>
+      End-to-end automation pipelines
+    </div>
+  </div>
+</div>
+```
+
+### AI Tool Card
+
+```html
+<a class="ai-card" href="https://..." target="_blank">
+  <div class="ai-tag">AI-Build</div>
+  <div class="ai-title">Automated Batch Invoice Checker</div>
+  <div class="ai-desc">Scans 1,000 invoices per second for validation and anomaly detection</div>
+</a>
+```
+
+### CSS for All Table Components
+
+```css
+/* Standard table */
+.f-table{width:100%;border-collapse:collapse;font-size:13px;}
+.f-table thead{background:var(--near-black);color:var(--white);}
+.f-table th{
+  padding:8px 10px;font-size:11px;font-weight:700;
+  letter-spacing:.5px;text-transform:uppercase;text-align:left;
+}
+.f-table td{padding:8px 10px;border-bottom:1px solid var(--off-white);}
+.f-table tbody tr:nth-child(even){background:rgba(0,0,0,.02);}
+.f-table tbody tr:hover{background:var(--pale-red);}
+.row-label{font-weight:600;color:var(--black);background:rgba(0,0,0,.02);}
+
+/* Owner pill */
+.owner-pill{
+  padding:2px 10px;border-radius:2px;font-size:10px;font-weight:700;
+  letter-spacing:.3px;
+}
+
+/* Matrix card */
+.mx-card{
+  background:var(--white);border:1px solid var(--off-white);
+  border-radius:var(--radius);padding:14px 16px;
+  box-shadow:var(--shadow-sm);
+  transition:border-color .2s,box-shadow .2s,transform .2s;
+}
+.mx-card:hover{border-color:var(--red);box-shadow:var(--shadow-red);transform:translateY(-2px);}
+.mx-head{font-size:12px;font-weight:500;color:var(--red);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+.mx-list{font-size:12px;color:var(--charcoal);line-height:1.6;}
+
+/* AI card */
+.ai-card{
+  display:block;text-decoration:none;
+  background:var(--white);border:1px solid var(--off-white);
+  border-radius:var(--radius);padding:14px 16px;
+  box-shadow:var(--shadow-sm);
+  transition:border-color .2s,box-shadow .2s,transform .2s;
+  color:inherit;
+}
+.ai-card:hover{border-color:var(--red);box-shadow:var(--shadow-red);transform:translateY(-2px);}
+.ai-card .ai-title{font-size:14px;font-weight:500;color:var(--near-black);margin-bottom:4px;}
+.ai-card .ai-desc{font-size:12px;color:var(--charcoal);line-height:1.4;}
+.ai-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:700;letter-spacing:.5px;
+  padding:2px 8px;border-radius:2px;
+  background:var(--pale-purple);color:var(--purple);
+  margin-bottom:6px;
+}
+```
