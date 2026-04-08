@@ -330,3 +330,191 @@ font-family: 'Helvetica Neue', 'Lato', Arial, sans-serif;
 8. Buttons are rectangular (4px radius), never pill-shaped
 9. Typography never all-caps; sentence case throughout
 10. L-pattern textures can be used as background elements at very low opacity (3–8%) for brand richness without competing with content
+
+---
+
+## 10. HTML Presentation Engine (Slide Deck Template)
+
+When generating an HTML slide deck using this design system, **always use the complete engine below verbatim**. Do not rewrite the navigation logic — common AI-generated mistakes (stuck `animating` lock, missing initial `.active` class, wheel events swallowed by inner scroll) will break navigation silently.
+
+### Required HTML Shell
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Presentation Title</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    /* paste Lenovo design tokens + slide engine CSS here */
+    html,body{height:100%;overflow:hidden;font-family:'Lato','Helvetica Neue',Arial,sans-serif;}
+    .deck{position:relative;width:100%;height:100%;}
+    .slide{
+      position:absolute;inset:0;
+      display:flex;align-items:center;justify-content:center;
+      opacity:0;pointer-events:none;
+      transition:opacity .5s ease,transform .5s ease;
+      transform:translateY(60px);
+      overflow-y:auto;        /* ← allows tall slides to scroll internally */
+    }
+    .slide.active{opacity:1;pointer-events:auto;transform:translateY(0);}
+    .slide.exit-up{opacity:0;transform:translateY(-60px);}
+    .slide.exit-down{opacity:0;transform:translateY(60px);}
+    /* CRITICAL: first slide must also receive .active via JS init, not hardcoded */
+  </style>
+</head>
+<body>
+
+<!-- Navigation chrome -->
+<nav class="nav-bar">
+  <div class="nav-logo">le<span style="color:#E2232A">n</span>ovo</div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:16px;">
+    <span id="counter" style="font-size:12px;color:#6F7170;font-family:monospace;"></span>
+  </div>
+</nav>
+<div id="progress" class="progress"></div>
+<div id="dots" class="dot-nav"></div>
+
+<!-- Slide deck -->
+<div class="deck">
+  <!-- SLIDE 1 -->
+  <section class="slide" data-title="Cover">
+    <div class="s-inner"><!-- slide content --></div>
+  </section>
+
+  <!-- SLIDE 2 -->
+  <section class="slide" data-title="Agenda">
+    <div class="s-inner"><!-- slide content --></div>
+  </section>
+
+  <!-- add more slides... -->
+</div>
+
+<!-- ═══ SLIDE ENGINE — DO NOT MODIFY ═══ -->
+<script>
+(function(){
+  const slides   = document.querySelectorAll('.slide');
+  const dotsEl   = document.getElementById('dots');
+  const counter  = document.getElementById('counter');
+  const progress = document.getElementById('progress');
+  const total    = slides.length;
+  let current    = 0;
+  let animating  = false;
+
+  /* Build dot nav */
+  slides.forEach((s, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.title = s.dataset.title || ('Slide ' + (i + 1));
+    d.addEventListener('click', () => goTo(i));
+    dotsEl.appendChild(d);
+  });
+
+  function updateChrome() {
+    counter.textContent = (current + 1) + ' / ' + total;
+    progress.style.width = ((current + 1) / total * 100) + '%';
+    dotsEl.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+  }
+
+  function goTo(target) {
+    if (animating || target === current || target < 0 || target >= total) return;
+    animating = true;
+    const dir  = target > current ? 1 : -1;
+    const prev = slides[current];
+    const next = slides[target];
+
+    /* Reset enter-animations on destination slide */
+    next.querySelectorAll('.anim').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+    });
+
+    /* Position next off-screen without transition */
+    next.style.transition = 'none';
+    next.classList.remove('active', 'exit-up', 'exit-down');
+    next.style.opacity   = '0';
+    next.style.transform = dir > 0 ? 'translateY(60px)' : 'translateY(-60px)';
+
+    void next.offsetHeight; /* force reflow */
+
+    next.style.transition = ''; /* re-enable CSS transition */
+
+    /* Exit current */
+    prev.classList.remove('active');
+    prev.classList.add(dir > 0 ? 'exit-up' : 'exit-down');
+
+    /* Enter next */
+    next.style.opacity   = '1';
+    next.style.transform = 'translateY(0)';
+    next.classList.add('active');
+
+    /* Fire stagger animations */
+    setTimeout(() => {
+      next.querySelectorAll('.anim').forEach(el => {
+        el.style.opacity   = '';
+        el.style.transform = '';
+      });
+    }, 50);
+
+    current = target;
+    updateChrome();
+
+    /* Release lock after transition completes */
+    setTimeout(() => {
+      prev.classList.remove('exit-up', 'exit-down');
+      prev.style.opacity   = '';
+      prev.style.transform = '';
+      animating = false;
+    }, 600); /* must be >= CSS transition duration */
+  }
+
+  /* Keyboard */
+  document.addEventListener('keydown', e => {
+    if (['ArrowDown','ArrowRight','PageDown',' '].includes(e.key)) { e.preventDefault(); goTo(current + 1); }
+    if (['ArrowUp','ArrowLeft','PageUp'].includes(e.key))          { e.preventDefault(); goTo(current - 1); }
+    if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+    if (e.key === 'End')  { e.preventDefault(); goTo(total - 1); }
+  });
+
+  /* Mouse wheel — cooldown prevents accidental double-skip */
+  let wheelCD = false;
+  document.addEventListener('wheel', e => {
+    if (wheelCD) return;
+    wheelCD = true;
+    if (e.deltaY > 30)       goTo(current + 1);
+    else if (e.deltaY < -30) goTo(current - 1);
+    setTimeout(() => { wheelCD = false; }, 800);
+  }, { passive: true });
+
+  /* Touch swipe */
+  let touchY = 0;
+  document.addEventListener('touchstart', e => { touchY = e.touches[0].clientY; }, { passive: true });
+  document.addEventListener('touchend',   e => {
+    const dy = touchY - e.changedTouches[0].clientY;
+    if (Math.abs(dy) > 50) dy > 0 ? goTo(current + 1) : goTo(current - 1);
+  }, { passive: true });
+
+  /* ── INIT — activate first slide ── */
+  goTo(0);   /* intentionally bypasses the current===target guard via fresh state */
+  /* Fallback: if goTo(0) is skipped due to guard, force-activate */
+  if (!slides[0].classList.contains('active')) {
+    slides[0].classList.add('active');
+    slides[0].style.opacity   = '1';
+    slides[0].style.transform = 'translateY(0)';
+    updateChrome();
+  }
+})();
+</script>
+</body>
+</html>
+```
+
+### Critical Rules for Generating Slide Decks
+
+1. **Never hardcode `class="active"` on any `.slide`** — the JS engine sets it. Hardcoding causes the `animating` guard to block all navigation on first click.
+2. **Never set `overflow: hidden` on `body` inside a slide** — `body` already has it; inner slides need `overflow-y: auto` to allow tall content to scroll.
+3. **The `setTimeout(..., 600)` lock release must match or exceed the CSS `transition` duration** — if you shorten the transition to `.3s`, change the timeout to `350`.
+4. **Always use `document` for `keydown`/`wheel` listeners**, never a child element — otherwise focus state can silently swallow events.
+5. **`goTo(0)` on init replaces `slides[0].classList.add('active')`** — do not mix both patterns.
