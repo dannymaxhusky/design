@@ -363,7 +363,7 @@ When generating an HTML slide deck using this design system, **always use the co
       opacity:0;pointer-events:none;
       transition:opacity .5s ease,transform .5s ease;
       transform:translateY(60px);
-      overflow-y:auto;        /* ← allows tall slides to scroll internally */
+      overflow-y:hidden;      /* ← MUST be hidden; auto creates a scroll container that swallows wheel events before they reach document */
     }
     .slide.active{opacity:1;pointer-events:auto;transform:translateY(0);}
     .slide.exit-up{opacity:0;transform:translateY(-60px);}
