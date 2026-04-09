@@ -341,64 +341,348 @@ font-family: 'Helvetica Neue', 'Lato', Arial, sans-serif;
 
 ## 10. HTML Presentation Engine (Slide Deck Template)
 
-When generating an HTML slide deck using this design system, **always use the complete engine below verbatim**. Do not rewrite the navigation logic — common AI-generated mistakes (stuck `animating` lock, missing initial `.active` class, wheel events swallowed by inner scroll) will break navigation silently.
+When generating an HTML slide deck using this design system, **copy the complete shell below verbatim — CSS, HTML structure, and JS**. Do not rewrite the navigation logic or strip out CSS blocks. The most common AI-generated failures are:
 
-### Required HTML Shell
+- Slides hidden behind the fixed navbar (deck height not offset)
+- `goTo(0)` blocked by the `target === current` guard (first slide never animates)
+- Incomplete CSS causing unstyled components
+- `overflow-y:auto` on `.slide` letting inner scroll swallow wheel events
+
+### ⚠️ Known Bugs to Avoid
+
+| Bug | Cause | Fix in this shell |
+|-----|-------|-------------------|
+| First slide stuck / no animation | `let current = 0; goTo(0)` — guard fires `0===0` | `let current = -1` so guard passes |
+| Slides overlap top navbar | `.deck { height:100% }` ignores fixed 59px chrome | `margin-top:59px; height:calc(100%-59px)` |
+| Wheel skips two slides | Inner `overflow-y:auto` swallows first event | `overflow-y:hidden` on `.slide` |
+| `.anim` flickers on re-entry | JS + CSS both set opacity/transform, race condition | CSS-only stagger via `nth-child` delays |
+| Content cut off at bottom | `.s-inner` no max-height | `max-height:calc(100vh - 107px)` |
+
+---
+
+### Complete HTML Shell (copy verbatim)
 
 ```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Presentation Title</title>
-  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;500;700&display=swap" rel="stylesheet"/>
-  <style>
-    /* paste Lenovo design tokens + slide engine CSS here */
-    html,body{height:100%;overflow:hidden;font-family:'Lato','Helvetica Neue',Arial,sans-serif;}
-    .deck{position:relative;width:100%;height:100%;}
-    .slide{
-      position:absolute;inset:0;
-      display:flex;align-items:center;justify-content:center;
-      opacity:0;pointer-events:none;
-      transition:opacity .5s ease,transform .5s ease;
-      transform:translateY(60px);
-      overflow-y:hidden;      /* ← MUST be hidden; auto creates a scroll container that swallows wheel events before they reach document */
-    }
-    .slide.active{opacity:1;pointer-events:auto;transform:translateY(0);}
-    .slide.exit-up{opacity:0;transform:translateY(-60px);}
-    .slide.exit-down{opacity:0;transform:translateY(60px);}
-    /* CRITICAL: first slide must also receive .active via JS init, not hardcoded */
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Presentation Title</title>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════
+   LENOVO DESIGN TOKENS
+   ═══════════════════════════════════════════ */
+:root{
+  --red:#E2232A;--red-dark:#64131E;--red-darker:#1E0013;
+  --purple:#4D144A;--black:#000;--near-black:#1A1A1A;
+  --charcoal:#6F7170;--warm-gray:#C4BEB6;--off-white:#D9D8D6;
+  --white:#FFF;--pale-red:#FAECEB;--pale-red-m:#F0C7BF;
+  --pale-purple:#F1E1ED;--pale-blue:#EAEEF5;
+  --mid-red-2:#F26A52;--mid-red-3:#FFB9A2;
+  --success:#6ABF4A;--warning:#FF6A00;--info:#3E8DDD;
+  --shadow-sm:0 2px 8px rgba(0,0,0,.08);
+  --shadow-md:0 4px 16px rgba(0,0,0,.12);
+  --shadow-red:0 4px 16px rgba(226,35,42,.15);
+  --radius:4px;
+  --font:'Lato','Helvetica Neue',Arial,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --nav-h:56px;  /* navbar height */
+  --prog-h:3px;  /* progress bar height */
+  --chrome-h:59px; /* nav-h + prog-h — used for deck offset */
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--off-white);color:var(--near-black);}
+
+/* ═══════════════════════════════════════════
+   SLIDE ENGINE
+   ═══════════════════════════════════════════ */
+
+/* CRITICAL: deck must be offset by chrome height so slides never go behind navbar */
+.deck{
+  position:relative;
+  width:100%;
+  margin-top:var(--chrome-h);
+  height:calc(100% - var(--chrome-h));
+  overflow:hidden;
+}
+
+.slide{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;visibility:hidden;pointer-events:none;
+  /* No transform on inactive — avoids GPU layer creation for off-screen slides */
+  overflow-y:hidden; /* MUST stay hidden — auto creates inner scroll that swallows wheel events */
+}
+.slide.active{
+  opacity:1;visibility:visible;pointer-events:auto;
+  transition:opacity .45s ease;
+}
+
+/* Slide inner: constrained width + height so content never overflows */
+.s-inner{
+  width:100%;
+  max-width:1200px;
+  padding:40px 48px;
+  margin:0 auto;
+  max-height:calc(100vh - var(--chrome-h) - 16px); /* viewport minus chrome minus breathing room */
+  overflow-y:auto;  /* inner scroll ONLY on .s-inner, not on .slide */
+}
+.s-inner::-webkit-scrollbar{width:4px;}
+.s-inner::-webkit-scrollbar-thumb{background:var(--warm-gray);border-radius:2px;}
+
+/* ── Enter animations — CSS-only stagger, no JS inline style manipulation ── */
+/* Elements with .anim start hidden; .slide.active triggers them in sequence */
+.anim{
+  opacity:0;
+  transform:translateY(16px);
+  transition:opacity .45s ease,transform .45s ease;
+}
+.slide.active .anim                   {opacity:1;transform:translateY(0);transition-delay:.06s;}
+.slide.active .anim:nth-child(2)      {transition-delay:.12s;}
+.slide.active .anim:nth-child(3)      {transition-delay:.18s;}
+.slide.active .anim:nth-child(4)      {transition-delay:.24s;}
+.slide.active .anim:nth-child(5)      {transition-delay:.30s;}
+.slide.active .anim:nth-child(6)      {transition-delay:.36s;}
+.slide.active .anim:nth-child(7)      {transition-delay:.42s;}
+.slide.active .anim:nth-child(8)      {transition-delay:.48s;}
+.slide.active .anim:nth-child(n+9)    {transition-delay:.54s;}
+
+/* ═══════════════════════════════════════════
+   NAVIGATION CHROME
+   ═══════════════════════════════════════════ */
+.nav-bar{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  background:var(--white);border-bottom:1px solid var(--off-white);
+  height:var(--nav-h);display:flex;align-items:center;padding:0 32px;
+  box-shadow:var(--shadow-sm);
+}
+.nav-logo{font-size:20px;font-weight:700;letter-spacing:-.5px;color:var(--near-black);}
+.nav-badge{
+  background:var(--pale-red);color:var(--red);
+  font-size:10px;font-weight:700;letter-spacing:.8px;
+  padding:2px 8px;border-radius:2px;text-transform:uppercase;margin-left:12px;
+}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:16px;}
+.slide-counter{font-size:12px;color:var(--charcoal);font-family:var(--mono);letter-spacing:.3px;}
+
+.progress{
+  position:fixed;top:var(--nav-h);left:0;height:var(--prog-h);
+  background:var(--red);z-index:201;width:0;
+  transition:width .4s ease;
+}
+
+.dot-nav{
+  position:fixed;right:20px;top:50%;z-index:200;
+  transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;
+}
+.dot{
+  width:10px;height:10px;border-radius:50%;
+  background:var(--warm-gray);cursor:pointer;
+  transition:background .2s,transform .2s;
+  border:2px solid transparent;
+}
+.dot:hover{background:var(--mid-red-2);}
+.dot.active{background:var(--red);transform:scale(1.3);border-color:var(--red);}
+
+/* ═══════════════════════════════════════════
+   SLIDE BACKGROUNDS
+   ═══════════════════════════════════════════ */
+.slide-white   {background:var(--white);}
+.slide-offwhite{background:var(--off-white);}
+.slide-dark    {background:var(--black);}
+
+.slide-dark .section-label{color:var(--warm-gray);border-bottom-color:var(--red);}
+.slide-dark .slide-title  {color:var(--white);}
+.slide-dark .slide-subtitle{color:var(--warm-gray);}
+.slide-dark .stat-card    {background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.08);}
+.slide-dark .stat-card .label{color:var(--warm-gray);}
+.slide-dark .kpi-box      {background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.08);}
+.slide-dark .kpi-label    {color:var(--warm-gray);}
+.slide-dark .sr-card      {background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.08);}
+.slide-dark .sr-card h4   {color:var(--white);}
+.slide-dark .sr-card p    {color:var(--warm-gray);}
+.slide-dark .mx-card      {background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.08);}
+.slide-dark .mx-list      {color:var(--warm-gray);}
+
+/* ═══════════════════════════════════════════
+   TYPOGRAPHY
+   ═══════════════════════════════════════════ */
+.section-label{
+  font-size:11px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--charcoal);
+  display:inline-block;margin-bottom:20px;padding-bottom:8px;
+  border-bottom:3px solid var(--red);
+}
+.slide-title{
+  font-size:42px;font-weight:300;line-height:.95;letter-spacing:-.3px;
+  color:var(--near-black);margin-bottom:10px;
+}
+.slide-subtitle{
+  font-size:17px;font-weight:300;color:var(--charcoal);
+  line-height:1.55;margin-bottom:24px;max-width:720px;
+}
+.red-rule{height:3px;background:var(--red);width:80px;margin-bottom:20px;}
+
+/* ═══════════════════════════════════════════
+   HOVER HIGHLIGHT (universal)
+   ═══════════════════════════════════════════ */
+.hv{transition:box-shadow .2s,border-color .2s,transform .2s;}
+.hv:hover{box-shadow:var(--shadow-red);border-color:var(--red)!important;transform:translateY(-2px);}
+
+/* ═══════════════════════════════════════════
+   TAGS & LABELS
+   ═══════════════════════════════════════════ */
+.tag{display:inline-block;padding:3px 9px;border-radius:2px;font-size:11px;font-weight:700;letter-spacing:.5px;}
+.tag-red    {background:var(--pale-red);color:var(--red);}
+.tag-purple {background:var(--pale-purple);color:var(--purple);}
+.tag-blue   {background:var(--pale-blue);color:var(--info);}
+.tag-neutral{background:var(--off-white);color:var(--charcoal);}
+.star{display:inline-block;color:var(--red);font-weight:700;font-size:.85em;margin-left:2px;vertical-align:middle;}
+
+/* ═══════════════════════════════════════════
+   TABLES
+   ═══════════════════════════════════════════ */
+.f-table{width:100%;border-collapse:collapse;font-size:13px;}
+.f-table thead{background:var(--near-black);color:var(--white);}
+.f-table th{padding:8px 10px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;text-align:left;}
+.f-table td{padding:8px 10px;border-bottom:1px solid var(--off-white);}
+.f-table tbody tr:nth-child(even){background:rgba(0,0,0,.02);}
+.f-table tbody tr:hover{background:var(--pale-red);}
+.row-label{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--charcoal);}
+
+/* ═══════════════════════════════════════════
+   GRID HELPERS
+   ═══════════════════════════════════════════ */
+.cards-grid{display:grid;gap:16px;}
+.c2{grid-template-columns:repeat(2,1fr);}
+.c3{grid-template-columns:repeat(3,1fr);}
+.c4{grid-template-columns:repeat(4,1fr);}
+.c5{grid-template-columns:repeat(5,1fr);}
+@media(max-width:900px){.c3,.c4,.c5{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:600px){.c2,.c3,.c4,.c5{grid-template-columns:1fr;}}
+
+/* ═══════════════════════════════════════════
+   COMPONENTS
+   ═══════════════════════════════════════════ */
+
+/* Stat card */
+.stat-card{background:var(--white);border:1px solid var(--off-white);border-radius:var(--radius);padding:20px 18px;box-shadow:var(--shadow-sm);}
+.stat-card .num  {font-size:32px;font-weight:700;color:var(--red);line-height:1;}
+.stat-card .label{font-size:12px;color:var(--charcoal);margin-top:6px;line-height:1.4;}
+
+/* KPI box */
+.kpi-box  {background:var(--white);border:1px solid var(--off-white);border-radius:var(--radius);padding:16px;text-align:center;box-shadow:var(--shadow-sm);}
+.kpi-num  {font-size:28px;font-weight:700;color:var(--red);}
+.kpi-label{font-size:11px;color:var(--charcoal);margin-top:4px;}
+
+/* Org chart */
+.org-root{text-align:center;padding:12px 28px;background:var(--near-black);color:var(--white);border-radius:var(--radius);display:inline-block;font-size:18px;font-weight:300;letter-spacing:-.1px;}
+.org-connector{text-align:center;margin:8px 0;color:var(--warm-gray);font-size:20px;}
+.org-branches{display:grid;gap:12px;}
+.org-branch{background:var(--white);border:1px solid var(--off-white);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow-sm);transition:border-color .2s,box-shadow .2s,transform .2s;}
+.org-branch:hover{border-color:var(--red);box-shadow:var(--shadow-red);transform:translateY(-2px);}
+.branch-head{font-size:14px;font-weight:500;color:var(--near-black);margin-bottom:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.branch-code{font-family:var(--mono);font-size:10px;font-weight:700;background:var(--pale-red);color:var(--red);padding:2px 6px;border-radius:2px;letter-spacing:.3px;}
+.sub-list{display:flex;flex-wrap:wrap;gap:5px;}
+.sub-item{font-size:11px;padding:3px 8px;border-radius:2px;background:rgba(0,0,0,.04);color:var(--charcoal);border:1px solid transparent;}
+.sub-item.new{background:var(--pale-red);color:var(--red);border-color:rgba(226,35,42,.15);font-weight:500;}
+
+/* Budget bar */
+.budget-bar{display:flex;align-items:center;gap:14px;padding:10px 16px;background:rgba(0,0,0,.03);border-radius:var(--radius);font-size:13px;flex-wrap:wrap;margin-bottom:16px;border-left:3px solid var(--red);}
+.budget-bar strong{color:var(--near-black);}
+.budget-bar .gap-negative{color:var(--red);font-weight:700;}
+
+/* Owner pill */
+.owner-pill{padding:2px 10px;border-radius:2px;font-size:10px;font-weight:700;letter-spacing:.3px;}
+
+/* AI card */
+.ai-card{display:block;text-decoration:none;background:var(--white);border:1px solid var(--off-white);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow-sm);transition:border-color .2s,box-shadow .2s,transform .2s;color:inherit;}
+.ai-card:hover{border-color:var(--red);box-shadow:var(--shadow-red);transform:translateY(-2px);}
+.ai-card .ai-title{font-size:14px;font-weight:500;color:var(--near-black);margin-bottom:4px;}
+.ai-card .ai-desc {font-size:12px;color:var(--charcoal);line-height:1.4;}
+.ai-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 8px;border-radius:2px;background:var(--pale-purple);color:var(--purple);margin-bottom:6px;}
+
+/* Matrix card */
+.mx-card{background:var(--white);border:1px solid var(--off-white);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow-sm);transition:border-color .2s,box-shadow .2s,transform .2s;}
+.mx-card:hover{border-color:var(--red);box-shadow:var(--shadow-red);transform:translateY(-2px);}
+.mx-head{font-size:12px;font-weight:500;color:var(--red);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+.mx-list{font-size:12px;color:var(--charcoal);line-height:1.6;}
+
+/* Timeline item */
+.tl-item{display:flex;gap:14px;align-items:flex-start;background:var(--white);border:1px solid var(--off-white);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow-sm);transition:border-color .2s,box-shadow .2s,transform .2s;}
+.tl-item:hover{border-color:var(--red);box-shadow:var(--shadow-red);transform:translateY(-2px);}
+.tl-q    {font-family:var(--mono);font-size:12px;font-weight:700;color:var(--red);min-width:32px;padding-top:2px;}
+.tl-body {flex:1;}
+.tl-title{font-size:14px;font-weight:500;color:var(--near-black);margin-bottom:3px;}
+.tl-desc {font-size:12px;color:var(--charcoal);line-height:1.45;}
+
+/* Success / Risk card */
+.sr-card{background:var(--white);border:1px solid var(--off-white);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow-sm);transition:border-color .2s,box-shadow .2s,transform .2s;}
+.sr-card:hover{border-color:var(--red);box-shadow:var(--shadow-red);transform:translateY(-2px);}
+.sr-card h4{font-size:14px;font-weight:500;color:var(--near-black);margin-bottom:6px;}
+.sr-card p {font-size:13px;color:var(--charcoal);line-height:1.5;}
+
+/* FY delivery / plan boxes */
+.fy-delivery{margin-top:8px;padding:7px 9px;background:linear-gradient(135deg,rgba(10,207,131,.08),rgba(26,188,254,.08));border:1px solid rgba(10,207,131,.25);border-radius:6px;font-size:11px;color:rgba(0,0,0,.6);line-height:1.45;}
+.fy-delivery-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#0acf83;margin-bottom:3px;}
+.fy-plan{margin-top:6px;padding:7px 9px;background:linear-gradient(135deg,rgba(162,89,255,.07),rgba(242,78,30,.07));border:1px solid rgba(162,89,255,.22);border-radius:6px;font-size:11px;color:rgba(0,0,0,.6);line-height:1.45;}
+.fy-plan-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#a259ff;margin-bottom:3px;}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════ */
+@media(max-width:768px){
+  .s-inner{padding:24px 16px;}
+  .slide-title{font-size:28px;}
+  .nav-bar{padding:0 16px;}
+  .dot-nav{right:10px;}
+}
+</style>
 </head>
 <body>
 
-<!-- Navigation chrome -->
+<!-- ═══ FIXED CHROME (navbar + progress) ═══ -->
 <nav class="nav-bar">
   <div class="nav-logo">Lenovo</div>
-  <div style="margin-left:auto;display:flex;align-items:center;gap:16px;">
-    <span id="counter" style="font-size:12px;color:#6F7170;font-family:monospace;"></span>
+  <div class="nav-badge">Deck Title</div>
+  <div class="nav-right">
+    <span class="slide-counter" id="counter"></span>
   </div>
 </nav>
-<div id="progress" class="progress"></div>
-<div id="dots" class="dot-nav"></div>
+<div class="progress" id="progress"></div>
+<div class="dot-nav" id="dots"></div>
 
-<!-- Slide deck -->
+<!-- ═══ SLIDE DECK ═══ -->
+<!-- CRITICAL: .deck margin-top is set by CSS var(--chrome-h) — do not add inline styles here -->
 <div class="deck">
-  <!-- SLIDE 1 -->
-  <section class="slide" data-title="Cover">
-    <div class="s-inner"><!-- slide content --></div>
+
+  <!-- SLIDE 1: Cover (dark) -->
+  <section class="slide slide-dark" data-title="Cover">
+    <div class="s-inner" style="text-align:center;">
+      <div class="anim"><span class="tag tag-red">Context Label</span></div>
+      <div class="red-rule anim" style="margin:16px auto;"></div>
+      <h1 class="slide-title anim" style="color:var(--white);font-size:48px;max-width:800px;margin:0 auto 14px;">Presentation Headline</h1>
+      <p class="slide-subtitle anim" style="max-width:560px;margin:0 auto;">Supporting context sentence that frames the deck.</p>
+    </div>
   </section>
 
-  <!-- SLIDE 2 -->
-  <section class="slide" data-title="Agenda">
-    <div class="s-inner"><!-- slide content --></div>
+  <!-- SLIDE 2: Content (white) -->
+  <section class="slide slide-white" data-title="Section">
+    <div class="s-inner">
+      <div class="section-label anim">Section Name</div>
+      <h2 class="slide-title anim">Slide Headline</h2>
+      <p class="slide-subtitle anim">One-line supporting context.</p>
+      <!-- slide body content here -->
+    </div>
   </section>
 
-  <!-- add more slides... -->
-</div>
+  <!-- add more slides using slide-white / slide-offwhite / slide-dark -->
 
-<!-- ═══ SLIDE ENGINE — DO NOT MODIFY ═══ -->
+</div><!-- /.deck -->
+
+<!-- ═══ SLIDE ENGINE — COPY VERBATIM, DO NOT MODIFY ═══ -->
 <script>
 (function(){
   const slides   = document.querySelectorAll('.slide');
@@ -406,13 +690,13 @@ When generating an HTML slide deck using this design system, **always use the co
   const counter  = document.getElementById('counter');
   const progress = document.getElementById('progress');
   const total    = slides.length;
-  let current    = 0;
+  let current    = -1;   /* MUST start at -1 so goTo(0) is not blocked by target===current guard */
   let animating  = false;
 
   /* Build dot nav */
   slides.forEach((s, i) => {
     const d = document.createElement('div');
-    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.className = 'dot';
     d.title = s.dataset.title || ('Slide ' + (i + 1));
     d.addEventListener('click', () => goTo(i));
     dotsEl.appendChild(d);
@@ -427,56 +711,23 @@ When generating an HTML slide deck using this design system, **always use the co
   function goTo(target) {
     if (animating || target === current || target < 0 || target >= total) return;
     animating = true;
-    const dir  = target > current ? 1 : -1;
-    const prev = slides[current];
+    const prev = current >= 0 ? slides[current] : null;
     const next = slides[target];
 
-    /* Reset enter-animations on destination slide */
-    next.querySelectorAll('.anim').forEach(el => {
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(20px)';
-    });
+    /* Deactivate previous slide */
+    if (prev) prev.classList.remove('active');
 
-    /* Position next off-screen without transition */
-    next.style.transition = 'none';
-    next.classList.remove('active', 'exit-up', 'exit-down');
-    next.style.opacity   = '0';
-    next.style.transform = dir > 0 ? 'translateY(60px)' : 'translateY(-60px)';
-
-    void next.offsetHeight; /* force reflow */
-
-    next.style.transition = ''; /* re-enable CSS transition */
-
-    /* Exit current */
-    prev.classList.remove('active');
-    prev.classList.add(dir > 0 ? 'exit-up' : 'exit-down');
-
-    /* Enter next */
-    next.style.opacity   = '1';
-    next.style.transform = 'translateY(0)';
+    /* Activate next slide — CSS handles .anim stagger via nth-child delays */
     next.classList.add('active');
-
-    /* Fire stagger animations */
-    setTimeout(() => {
-      next.querySelectorAll('.anim').forEach(el => {
-        el.style.opacity   = '';
-        el.style.transform = '';
-      });
-    }, 50);
 
     current = target;
     updateChrome();
 
-    /* Release lock after transition completes */
-    setTimeout(() => {
-      prev.classList.remove('exit-up', 'exit-down');
-      prev.style.opacity   = '';
-      prev.style.transform = '';
-      animating = false;
-    }, 600); /* must be >= CSS transition duration */
+    /* Release lock after CSS transition completes (matches .anim max delay + duration) */
+    setTimeout(() => { animating = false; }, 600);
   }
 
-  /* Keyboard */
+  /* Keyboard navigation */
   document.addEventListener('keydown', e => {
     if (['ArrowDown','ArrowRight','PageDown',' '].includes(e.key)) { e.preventDefault(); goTo(current + 1); }
     if (['ArrowUp','ArrowLeft','PageUp'].includes(e.key))          { e.preventDefault(); goTo(current - 1); }
@@ -502,15 +753,8 @@ When generating an HTML slide deck using this design system, **always use the co
     if (Math.abs(dy) > 50) dy > 0 ? goTo(current + 1) : goTo(current - 1);
   }, { passive: true });
 
-  /* ── INIT — activate first slide ── */
-  goTo(0);   /* intentionally bypasses the current===target guard via fresh state */
-  /* Fallback: if goTo(0) is skipped due to guard, force-activate */
-  if (!slides[0].classList.contains('active')) {
-    slides[0].classList.add('active');
-    slides[0].style.opacity   = '1';
-    slides[0].style.transform = 'translateY(0)';
-    updateChrome();
-  }
+  /* Init — goTo(0) works because current starts at -1 */
+  goTo(0);
 })();
 </script>
 </body>
@@ -519,11 +763,14 @@ When generating an HTML slide deck using this design system, **always use the co
 
 ### Critical Rules for Generating Slide Decks
 
-1. **Never hardcode `class="active"` on any `.slide`** — the JS engine sets it. Hardcoding causes the `animating` guard to block all navigation on first click.
-2. **Never set `overflow: hidden` on `body` inside a slide** — `body` already has it; inner slides need `overflow-y: auto` to allow tall content to scroll.
-3. **The `setTimeout(..., 600)` lock release must match or exceed the CSS `transition` duration** — if you shorten the transition to `.3s`, change the timeout to `350`.
-4. **Always use `document` for `keydown`/`wheel` listeners**, never a child element — otherwise focus state can silently swallow events.
-5. **`goTo(0)` on init replaces `slides[0].classList.add('active')`** — do not mix both patterns.
+1. **Never hardcode `class="active"` on any `.slide`** — the JS engine sets it on init.
+2. **Never change `let current = -1`** — if you set it to `0`, `goTo(0)` is blocked by the guard and the first slide never animates.
+3. **Never add `overflow-y:auto` to `.slide`** — only `.s-inner` scrolls; `.slide` must stay `overflow-y:hidden` or wheel events get swallowed.
+4. **Never add inline `margin-top` or `height` to `.deck`** — these are set by CSS variables `--chrome-h`; overriding them breaks the layout.
+5. **Always use `document` for `keydown`/`wheel` listeners**, never a child element.
+6. **Add `.anim` to the first 8 direct children of `.s-inner`** to get staggered entry — deeper nesting won't pick up `nth-child` delays.
+7. **Slide background classes**: use `slide-white`, `slide-offwhite`, or `slide-dark` — not custom inline `background` on `.slide`.
+8. **For tall content** (tables, org charts): wrap the overflowing element in `<div style="overflow-x:auto;">` inside `.s-inner`; do not increase `.s-inner` max-height.
 
 ---
 
